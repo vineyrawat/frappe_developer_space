@@ -1,0 +1,40 @@
+{
+  "name": "developer_space",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=/assets/frappe_developer_space/developer_space/ && yarn copy-html-entry",
+    "preview": "vite preview",
+    "copy-html-entry": "cp ../frappe_developer_space/public/developer_space/index.html ../frappe_developer_space/www/developer_space.html"
+  },
+  "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/lang-python": "^6.1.6",
+    "@guolao/vue-monaco-editor": "^1.5.4",
+    "@vueuse/core": "^11.0.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "codemirror": "^6.0.1",
+    "feather-icons": "4",
+    "highlight.js": "^11.10.0",
+    "lucide-vue-next": "^0.424.0",
+    "radix-vue": "^1.9.2",
+    "simple-code-editor": "^2.0.9",
+    "socket.io-client": "^4.5.1",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "vue": "^3.4.31",
+    "vue-codemirror": "^6.1.1",
+    "vue-feather": "2",
+    "vue-router": "^4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.5",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.40",
+    "tailwindcss": "^3.4.7",
+    "vite": "^5.3.4"
+  }
+}

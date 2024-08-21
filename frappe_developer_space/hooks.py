@@ -227,3 +227,5 @@ app_license = "unlicense"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+website_route_rules = [{'from_route': '/developer_space/<path:app_path>', 'to_route': 'developer_space'},]
