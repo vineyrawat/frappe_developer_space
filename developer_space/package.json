@@ -28,7 +28,8 @@
     "vue": "^3.4.31",
     "vue-codemirror": "^6.1.1",
     "vue-feather": "2",
-    "vue-router": "^4"
+    "vue-router": "^4",
+    "vue-sonner": "^1.1.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",

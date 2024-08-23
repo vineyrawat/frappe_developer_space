@@ -4,6 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
 import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet'
+import {
     Dialog,
     DialogClose,
     DialogContent,
@@ -15,11 +23,13 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BugPlay, Loader2 } from 'lucide-vue-next';
+import { BugPlay, CheckCircle, Loader2, ShieldX } from 'lucide-vue-next';
 import { pythonAutoCompletes } from '@/components/constants/autocompletes';
 import GlobalLoader from '@/components/GlobalLoader.vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'vue-sonner';
 
 const route = useRoute()
 
@@ -34,19 +44,50 @@ const log = console.log
 
 const code = ref('')
 const isExecuting = ref(false)
-
-const handleExecute = () => {
-    isExecuting.value = true
-    setTimeout(() => {
-        isExecuting.value = false
-    }, 3000);
-}
-
+const selectedResource = ref(null)
+const alwaysOpenOutputAfterExecute = ref(false)
 
 
 const fetchingScriptDetails = ref(true)
 const error = ref(null)
 const scriptDetails = ref(null)
+const lastOutput = ref(null)
+const outputSheetOpen = ref(false)
+
+const handleExecute = async () => {
+    console.log("EXECUTING SCRIPT")
+    isExecuting.value = true
+    try {
+        await axios.put(`/api/resource/Server Script/${route.params.script}`, {
+            script: code.value
+        })
+        const res = await executeScript()
+        toast('Script Executed', {
+            description: 'Script executed successfully',
+            icon: CheckCircle
+        })
+        lastOutput.value = {
+            type: 'info',
+            message: 'total records: 986'
+        }
+    } catch (err) {
+        toast('Unable to execute', {
+            description: 'Unable to execute script',
+            icon: ShieldX
+        })
+        lastOutput.value = {
+            type: 'error',
+            message: err?.message.toString()
+        }
+    } finally {
+        isExecuting.value = false
+        console.log(alwaysOpenOutputAfterExecute.value)
+        if (alwaysOpenOutputAfterExecute.value) {
+            outputSheetOpen.value = true
+        }
+    }
+}
+
 
 async function fetchScriptDetails() {
     console.log("FETCHING SCRIPT DETAILS")
@@ -93,18 +134,19 @@ onMounted(() => {
                             <BugPlay size="18" class="mr-2" /> Execute
                         </Button>
                     </DialogTrigger>
-                    <DialogContent class="sm:max-w-md">
+                    <DialogContent v-if="scriptDetails?.script_type == 'DocType Event'" class="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Select Lead</DialogTitle>
+                            <DialogTitle>Select {{ scriptDetails?.reference_doctype }}</DialogTitle>
                             <DialogDescription>
-                                Select lead to execute script
+                                Select {{ scriptDetails?.reference_doctype }} to execute script
                             </DialogDescription>
                         </DialogHeader>
                         <div class="grid flex-1 gap-2">
                             <Label for="link" class="sr-only">
                                 Lead
                             </Label>
-                            <Input id="link" default-value="LEAD00991" read-only />
+                            <Input id="link" v-model="selectedResource"
+                                :placeholder="`Select ${scriptDetails?.reference_doctype}`" read-only />
                         </div>
                         <DialogFooter>
                             <DialogClose as-child>
@@ -126,9 +168,31 @@ onMounted(() => {
             <codemirror :style="{ height: '80vh', maxWidth: '70rem' }" v-model="code" placeholder="Code goes here..."
                 :autofocus="true" :indent-with-tab="true" :tab-size="4" :extensions="extensions" @ready="handleReady"
                 @change="log('change', $event)" @focus="log('focus', $event)" @blur="log('blur', $event)" />
-            <div class="flex flex-1 items-center justify-between">
+            <div class="flex flex-1 items-center gap-2 p-2 justify-between">
+                <span class="flex-1"></span>
+                <Label>Always Open Output</Label>
+                <Switch :checked="alwaysOpenOutputAfterExecute"
+                    v-on:update:checked="alwaysOpenOutputAfterExecute = $event" />
+                <Sheet :open="outputSheetOpen" v-on:update:open="outputSheetOpen = $event">
+                    <SheetTrigger @click="outputSheetOpen = true">
+                        <Button v-if="lastOutput?.type == 'error'" variant="destructive" size="xs">
+                            See Error
+                        </Button>
+                        <Button v-if="lastOutput?.type == 'info'" size="xs">
+                            See Output
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>{{ lastOutput?.type }}</SheetTitle>
+                            <SheetDescription
+                                :class="`${lastOutput?.type == 'error' ? 'text-red-500' : 'text-green-500'}`">
+                                {{ lastOutput?.message }}
+                            </SheetDescription>
+                        </SheetHeader>
+                    </SheetContent>
+                </Sheet>
             </div>
-
         </div>
     </div>
 </template>
