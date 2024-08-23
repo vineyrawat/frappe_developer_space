@@ -27,7 +27,7 @@ import { BugPlay, CheckCircle, Loader2, ShieldX } from 'lucide-vue-next';
 import { pythonAutoCompletes } from '@/components/constants/autocompletes';
 import GlobalLoader from '@/components/GlobalLoader.vue';
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'vue-sonner';
 
@@ -45,7 +45,7 @@ const log = console.log
 const code = ref('')
 const isExecuting = ref(false)
 const selectedResource = ref(null)
-const alwaysOpenOutputAfterExecute = ref(false)
+const alwaysOpenOutputAfterExecute = ref(true)
 
 
 const fetchingScriptDetails = ref(true)
@@ -53,31 +53,35 @@ const error = ref(null)
 const scriptDetails = ref(null)
 const lastOutput = ref(null)
 const outputSheetOpen = ref(false)
+const router = useRouter()
 
 const handleExecute = async () => {
     console.log("EXECUTING SCRIPT")
     isExecuting.value = true
     try {
-        await axios.put(`/api/resource/Server Script/${route.params.script}`, {
-            script: code.value
+        await saveScript()
+        const res = await axios.post(`/api/method/frappe_developer_space.api.server_script.execute_script`, {
+            script_doc_name: route.params.script,
+            selected_resource: selectedResource.value,
         })
-        const res = await executeScript()
+        console.log("RES: ", res.data)
         toast('Script Executed', {
             description: 'Script executed successfully',
             icon: CheckCircle
         })
         lastOutput.value = {
             type: 'info',
-            message: 'total records: 986'
+            message: res.data
         }
     } catch (err) {
+        console.log("ERROR: ", err)
         toast('Unable to execute', {
             description: 'Unable to execute script',
             icon: ShieldX
         })
         lastOutput.value = {
             type: 'error',
-            message: err?.message.toString()
+            message: (err.response?.data ?? "")
         }
     } finally {
         isExecuting.value = false
@@ -88,6 +92,30 @@ const handleExecute = async () => {
     }
 }
 
+async function saveScript() {
+    console.log("SAVING SCRIPT")
+    try {
+        await axios.put(`/api/resource/Server Script/${route.params.script}`, {
+            script: code.value
+        })
+        toast('Script Saved', {
+            description: 'Script saved successfully',
+            icon: CheckCircle
+        })
+    } catch (err) {
+        console.log("ERROR: ", err)
+        toast('Unable to save', {
+            description: 'Unable to save script',
+            icon: ShieldX
+        })
+    }
+}
+
+async function handleSave() {
+    await saveScript()
+    // go back to script details
+    router.go(-1)
+}
 
 async function fetchScriptDetails() {
     console.log("FETCHING SCRIPT DETAILS")
@@ -127,14 +155,15 @@ onMounted(() => {
                 {{ $route.params.script }}
             </h2>
             <div class="flex gap-2">
-                <Button variant="outline" size="sm">Save</Button>
+                <Button variant="outline" size="sm" @click="handleSave">Save</Button>
                 <Dialog>
                     <DialogTrigger as-child>
                         <Button size="sm">
                             <BugPlay size="18" class="mr-2" /> Execute
                         </Button>
                     </DialogTrigger>
-                    <DialogContent v-if="scriptDetails?.script_type == 'DocType Event'" class="sm:max-w-md">
+                    <DialogContent v-if="scriptDetails?.script_type == 'DocType Event'"
+                        class="sm:max-w-md overflow-y-scroll">
                         <DialogHeader>
                             <DialogTitle>Select {{ scriptDetails?.reference_doctype }}</DialogTitle>
                             <DialogDescription>
