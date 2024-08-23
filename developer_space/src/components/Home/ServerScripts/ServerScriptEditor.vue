@@ -1,6 +1,5 @@
 <script setup>
-// import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
-import { ref, shallowRef } from 'vue'
+import { onMounted, ref, shallowRef } from 'vue'
 import { Button } from '@/components/ui/button';
 import { Codemirror } from 'vue-codemirror'
 import { python } from '@codemirror/lang-python'
@@ -18,6 +17,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { BugPlay, Loader2 } from 'lucide-vue-next';
 import { pythonAutoCompletes } from '@/components/constants/autocompletes';
+import GlobalLoader from '@/components/GlobalLoader.vue';
+import axios from 'axios';
+import { useRoute } from 'vue-router';
+
+const route = useRoute()
 
 const extensions = [python()]
 
@@ -38,13 +42,43 @@ const handleExecute = () => {
     }, 3000);
 }
 
+
+
+const fetchingScriptDetails = ref(true)
+const error = ref(null)
+const scriptDetails = ref(null)
+
+async function fetchScriptDetails() {
+    console.log("FETCHING SCRIPT DETAILS")
+    fetchingScriptDetails.value = true
+    error.value = null
+    try {
+        const res = await axios.get(`/api/resource/Server Script/${route.params.script}?fields="*"`, {
+        })
+        console.log(res.data)
+        scriptDetails.value = res.data.data
+        code.value = res.data.data.script
+    } catch (error) {
+        console.log(error)
+        error.value = error?.message.toString()
+    } finally {
+        fetchingScriptDetails.value = false
+    }
+}
+
+
+onMounted(() => {
+    fetchScriptDetails()
+})
+
+
 </script>
 
 <template>
     <div class="flex flex-col h-full relative">
         <div
             :class="`w-full ${!isExecuting ? 'hidden' : 'flex'} transition-all duration-300  absolute h-full bg-gray-900 opacity-80  items-center justify-center flex-col z-10`">
-            <Loader2 class="animate-spin text-primary" size="40" />
+            <GlobalLoader />
             <p class="text-xl text-primary-foreground">Executing...</p>
         </div>
         <div class="flex justify-between p-2 h-14 items-center border-b">
@@ -88,10 +122,12 @@ const handleExecute = () => {
                 </Dialog>
             </div>
         </div>
-        <codemirror :style="{ height: '80vh' }" v-model="code" class="flex-1" placeholder="Code goes here..."
-            :autofocus="true" :indent-with-tab="true" :tab-size="4" :extensions="extensions" @ready="handleReady"
-            @change="log('change', $event)" @focus="log('focus', $event)" @blur="log('blur', $event)" />
-        <div class="flex flex-1 items-center justify-between">
+        <div>
+            <codemirror :style="{ height: '80vh', maxWidth: '70rem' }" v-model="code" placeholder="Code goes here..."
+                :autofocus="true" :indent-with-tab="true" :tab-size="4" :extensions="extensions" @ready="handleReady"
+                @change="log('change', $event)" @focus="log('focus', $event)" @blur="log('blur', $event)" />
+            <div class="flex flex-1 items-center justify-between">
+            </div>
 
         </div>
     </div>

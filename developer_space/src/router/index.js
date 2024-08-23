@@ -45,7 +45,7 @@ const routes = [
 
 const router = createRouter({
   base: "/developer_space/",
-  history: createWebHistory(),
+  history: createWebHistory("/developer_space/"),
   routes,
 });
 

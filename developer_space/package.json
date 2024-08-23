@@ -12,8 +12,8 @@
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.2",
     "@codemirror/lang-python": "^6.1.6",
-    "@guolao/vue-monaco-editor": "^1.5.4",
     "@vueuse/core": "^11.0.0",
+    "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "codemirror": "^6.0.1",

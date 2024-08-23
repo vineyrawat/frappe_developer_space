@@ -4,4 +4,4 @@ A frappe developer space app
 
 #### License
 
-unlicense
+MIT

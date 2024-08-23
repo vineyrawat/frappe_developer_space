@@ -11,19 +11,10 @@ import "./style.css"
 const app = createApp(App);
 const auth = reactive(new Auth());
 
-import { install as VueMonacoEditorPlugin } from '@guolao/vue-monaco-editor';
-
 
 // Plugins
 app.use(router);
 app.use(resourceManager);
-
-app.use(VueMonacoEditorPlugin, {
-	paths: {
-		// The recommended CDN config
-		vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs'
-	},
-})
 
 // Global Properties,
 // components can inject this
